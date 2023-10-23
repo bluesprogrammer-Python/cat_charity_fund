@@ -1,11 +1,13 @@
 from datetime import datetime
 from typing import Optional
-from app.services.invest import invest_donation
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models import User
 from app.models.donation import Donation
 from app.schemas.donation import DonationCreate
+from app.services.invest import invest_donation
 
 
 async def create_donation(
@@ -14,8 +16,7 @@ async def create_donation(
         user: Optional[User] = None
 ) -> Donation:
     new_donation_dict = new_donation.dict()
-    if user is not None:
-        new_donation_dict['user_id'] = user.id
+    new_donation_dict['user_id'] = user.id
     new_donation_dict['create_date'] = datetime.now()
     new_donation_dict['close_date'] = None
     new_donation_dict['invested_amount'] = 0

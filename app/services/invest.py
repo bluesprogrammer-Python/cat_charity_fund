@@ -1,12 +1,10 @@
 from datetime import datetime
-from typing import Optional
-from fastapi.encoders import jsonable_encoder
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models import User
+
 from app.models.charity_project import CharityProject
 from app.models.donation import Donation
-from app.schemas.donation import DonationCreate
 
 
 STORAGE_FOND = []
@@ -20,7 +18,8 @@ async def invest_donation(
     EXTRA_INVESTED = 0
     IS_IN_STORAGE = False
     donation = new_donation_dict['full_amount']
-    project = await session.execute(select(CharityProject).order_by(
+    project = await session.execute(
+        select(CharityProject).order_by(
             CharityProject.create_date
         ).where(CharityProject.fully_invested == 0)
     )
@@ -80,7 +79,8 @@ async def invest_donation(
 
 async def extra_invest(EXTRA_INVESTED, new_donation_dict, session: AsyncSession):
     """Функция для дополнительного инвестирования в другие открытые проекты"""
-    project = await session.execute(select(CharityProject).order_by(
+    project = await session.execute(
+        select(CharityProject).order_by(
             CharityProject.create_date
         ).where(CharityProject.fully_invested == 0)
     )
@@ -125,7 +125,8 @@ async def extra_invest(EXTRA_INVESTED, new_donation_dict, session: AsyncSession)
 async def invest_extra_in_new_project(
         new_project_dict,
         session: AsyncSession):
-    donation = await session.execute(select(Donation).order_by(
+    donation = await session.execute(
+        select(Donation).order_by(
             Donation.create_date
         ).where(Donation.fully_invested == 0)
     )

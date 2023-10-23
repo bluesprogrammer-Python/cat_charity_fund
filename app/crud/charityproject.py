@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-from app.services.invest import invest_extra_in_new_project
+
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.charity_project import CharityProject
 from app.schemas.charityproject import (CharityProjectCreate,
                                         CharityProjectUpdate)
+from app.services.invest import invest_extra_in_new_project
 
 
 async def create_charityproject(

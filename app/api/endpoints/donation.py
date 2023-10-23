@@ -28,6 +28,7 @@ async def create_new_donation(
     '/',
     dependencies=[Depends(current_superuser)],
     response_model=list[AllDonationDB],
+    response_model_exclude_none=True,
 )
 async def get_all_donation(
         session: AsyncSession = Depends(get_async_session),

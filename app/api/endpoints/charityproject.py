@@ -12,15 +12,18 @@ from app.schemas.charityproject import (CharityProjectCreate, CharityProjectDB,
 router = APIRouter(prefix='/charity_project')
 
 
-@router.post('/',
-             dependencies=[Depends(current_superuser)],
-             response_model=CharityProjectDB
-             )
+@router.post(
+    '/',
+    dependencies=[Depends(current_superuser)],
+    response_model=CharityProjectDB,
+    response_model_exclude_none=True,
+)
 async def create_new_project(
         charityproject: CharityProjectCreate,
         session: AsyncSession = Depends(get_async_session),
 ):
     await check_name_duplicate(charityproject.name, session)
+    await check_desc_exists(charityproject.description, session)
     new_project = await create_charityproject(charityproject, session)
     return new_project
 
@@ -28,6 +31,7 @@ async def create_new_project(
 @router.get(
     '/',
     response_model=list[CharityProjectDB],
+    response_model_exclude_none=True,
 )
 async def get_all_projects(
         session: AsyncSession = Depends(get_async_session),
@@ -49,10 +53,8 @@ async def partially_update_project(
     project = await check_project_exists(
         project_id, session
     )
-
     if obj_in.name is not None:
         await check_name_duplicate(obj_in.name, session)
-
     project = await update_project(
         project, obj_in, session
     )
@@ -71,11 +73,21 @@ async def check_name_duplicate(
         )
 
 
+async def check_desc_exists(
+        project_description: str,
+        session: AsyncSession,
+) -> None:
+    if project_description is None or project_description == "":
+        raise HTTPException(
+            status_code=422,
+            detail='Создание проектов с пустым описанием запрещено.',
+        )
+
+
 @router.delete(
     '/{project_id}',
     dependencies=[Depends(current_superuser)],
     response_model=CharityProjectDB,
-
 )
 async def remove_project(
         project_id: int,

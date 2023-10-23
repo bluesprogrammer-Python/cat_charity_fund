@@ -32,10 +32,10 @@ class CharityProjectUpdate(CharityProjectBase):
 
 class CharityProjectDB(CharityProjectCreate):
     id: int
-    invested_amount: int = Field(default=0)
-    fully_invested: bool = Field(default=False)
+    invested_amount: Optional[int] = Field(default=0)
+    fully_invested: Optional[bool] = Field(default=False)
     create_date: datetime
-    close_date: datetime = Field(default=None)
+    close_date: Optional[datetime] = Field(default=None)
 
     class Config:
         title = 'Схема для возвращаемого проекта'
