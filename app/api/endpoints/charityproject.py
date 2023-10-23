@@ -23,7 +23,7 @@ async def create_new_project(
         session: AsyncSession = Depends(get_async_session),
 ):
     await check_name_duplicate(charityproject.name, session)
-    await check_desc_exists(charityproject.description, session)
+    await check_desc_exists(charityproject.description)
     new_project = await create_charityproject(charityproject, session)
     return new_project
 
@@ -55,10 +55,28 @@ async def partially_update_project(
     )
     if obj_in.name is not None:
         await check_name_duplicate(obj_in.name, session)
+    await check_project_fullamount(project, obj_in)
     project = await update_project(
         project, obj_in, session
     )
     return project
+
+
+async def check_project_fullamount(
+        project: CharityProjectDB,
+        obj_in: CharityProjectUpdate,
+) -> None:
+    if obj_in.full_amount is not None:
+        if project.invested_amount > obj_in.full_amount:
+            raise HTTPException(
+                status_code=400,
+                detail='Запрещено устанавливать требуемую сумму меньше внесённой.',
+            )
+    if project.fully_invested is True:
+        raise HTTPException(
+            status_code=400,
+            detail='Закрытый проект нельзя редактировать!',
+        )
 
 
 async def check_name_duplicate(
@@ -75,7 +93,6 @@ async def check_name_duplicate(
 
 async def check_desc_exists(
         project_description: str,
-        session: AsyncSession,
 ) -> None:
     if project_description is None or project_description == "":
         raise HTTPException(
@@ -96,13 +113,16 @@ async def remove_project(
     project = await check_project_exists(
         project_id, session
     )
-    project = await check_project_close(
-        project_id, session
+    project_check_close = await check_project_close(
+        project
     )
-    project = await delete_project(
-        project, session
+    project_check_invest = await check_project_is_invest(
+        project_check_close
     )
-    return project
+    del_project = await delete_project(
+        project_check_invest, session
+    )
+    return del_project
 
 
 async def check_project_exists(
@@ -121,15 +141,22 @@ async def check_project_exists(
 
 
 async def check_project_close(
-        project_id: int,
-        session: AsyncSession,
-) -> CharityProjectDB:
-    project = await get_project_by_id(
-        project_id, session
-    )
+        project: CharityProjectDB,
+) -> None:
     if project.close_date is not None:
         raise HTTPException(
             status_code=400,
             detail='В проект были внесены средства, не подлежит удалению!'
+        )
+    return project
+
+
+async def check_project_is_invest(
+        project: CharityProjectDB,
+) -> None:
+    if project.invested_amount != 0:
+        raise HTTPException(
+            status_code=400,
+            detail='В проект были внесены средства, не подлежит удалению!',
         )
     return project

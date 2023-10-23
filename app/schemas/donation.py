@@ -27,11 +27,11 @@ class UserDonationDB(DonationCreate):
 
 class AllDonationDB(DonationCreate):
     id: int
-    create_date: datetime
     user_id: int
-    invested_amount: Optional[int] = Field(default=0)
-    fully_invested: Optional[bool] = Field(default=False)
-    close_date: Optional[datetime] = Field(default=None)
+    invested_amount: int
+    fully_invested: bool
+    create_date: datetime
+    close_date: Optional[datetime]
 
     class Config:
         title = 'Схема для получения информации обо всех пожертвованиях'

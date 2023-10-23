@@ -1,8 +1,8 @@
-"""Add models
+"""add default values in models
 
-Revision ID: b025f5863474
+Revision ID: e252950b4ec3
 Revises: 
-Create Date: 2023-10-18 22:55:03.088990
+Create Date: 2023-10-23 20:23:43.729027
 
 """
 import sqlalchemy as sa
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = 'b025f5863474'
+revision = 'e252950b4ec3'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -22,7 +22,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=100), nullable=False),
     sa.Column('description', sa.Text(), nullable=False),
-    sa.Column('full_amount', sa.Integer(), nullable=True),
+    sa.Column('full_amount', sa.Integer(), nullable=False),
     sa.Column('invested_amount', sa.Integer(), nullable=True),
     sa.Column('fully_invested', sa.Boolean(), nullable=True),
     sa.Column('create_date', sa.DateTime(), nullable=True),
@@ -44,7 +44,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('comment', sa.Text(), nullable=True),
-    sa.Column('full_amount', sa.Integer(), nullable=True),
+    sa.Column('full_amount', sa.Integer(), nullable=False),
     sa.Column('invested_amount', sa.Integer(), nullable=True),
     sa.Column('fully_invested', sa.Boolean(), nullable=True),
     sa.Column('create_date', sa.DateTime(), nullable=True),
