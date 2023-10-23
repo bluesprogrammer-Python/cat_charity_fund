@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.charity_project import CharityProject
 from app.models.donation import Donation
 
+
 STORAGE_FOND = []
 
 
@@ -124,15 +125,15 @@ async def extra_invest(EXTRA_INVESTED, new_donation_dict, session: AsyncSession)
 async def invest_extra_in_new_project(
         new_project_dict,
         session: AsyncSession):
-    donation = await session.execute(
-        select(Donation).order_by(
-            Donation.create_date
-        ).where(Donation.fully_invested == 0)
-    )
-    donation = donation.scalars().first()
-    if len(STORAGE_FOND) > 0:
+    while len(STORAGE_FOND) > 0:
         rezerv_donation = STORAGE_FOND[0]
-        if rezerv_donation < new_project_dict['full_amount']:
+        donation = await session.execute(
+            select(Donation).order_by(
+                Donation.create_date
+            ).where(Donation.fully_invested == 0)
+        )
+        donation = donation.scalars().first()
+        if rezerv_donation + new_project_dict['invested_amount'] < new_project_dict['full_amount']:
             """Установка значения для модели CharityProject"""
             new_project_dict['invested_amount'] += rezerv_donation
             donation.invested_amount += rezerv_donation
@@ -140,7 +141,7 @@ async def invest_extra_in_new_project(
             donation.close_date = datetime.now()
             del STORAGE_FOND[0]
 
-        elif rezerv_donation == new_project_dict['full_amount']:
+        elif rezerv_donation + new_project_dict['invested_amount'] == new_project_dict['full_amount']:
             """Установка значений для модели CharityProject"""
             new_project_dict['invested_amount'] += rezerv_donation
             new_project_dict['close_date'] = datetime.now()
@@ -150,14 +151,17 @@ async def invest_extra_in_new_project(
             donation.close_date = datetime.now()
             del STORAGE_FOND[0]
 
-        elif rezerv_donation > new_project_dict['full_amount']:
-            EXTRA_INVESTED = rezerv_donation - new_project_dict['full_amount']
+        elif rezerv_donation + new_project_dict['invested_amount'] > new_project_dict['full_amount']:
+            EXTRA_INVESTED = (rezerv_donation + new_project_dict['invested_amount']) - new_project_dict['full_amount']
+            INVESTED_BEFORE = new_project_dict['invested_amount']
             """Установка значений для модели CharityProject"""
-            new_project_dict['invested_amount'] += new_project_dict['full_amount']
+            new_project_dict['invested_amount'] = new_project_dict['full_amount']
             new_project_dict['close_date'] = datetime.now()
             new_project_dict['fully_invested'] = True
-            donation.invested_amount += new_project_dict['full_amount']
+            donation.invested_amount += (new_project_dict['full_amount'] - INVESTED_BEFORE)
             STORAGE_FOND[0] = EXTRA_INVESTED
+            break
 
     print(STORAGE_FOND)
+
     return new_project_dict

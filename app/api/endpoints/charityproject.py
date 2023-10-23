@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from datetime import datetime
 from app.core.db import get_async_session
 from app.core.user import current_superuser
 from app.crud.charityproject import (create_charityproject, delete_project,
@@ -53,9 +53,9 @@ async def partially_update_project(
     project = await check_project_exists(
         project_id, session
     )
+    await check_project_fullamount(project, obj_in)
     if obj_in.name is not None:
         await check_name_duplicate(obj_in.name, session)
-    await check_project_fullamount(project, obj_in)
     project = await update_project(
         project, obj_in, session
     )
@@ -66,17 +66,21 @@ async def check_project_fullamount(
         project: CharityProjectDB,
         obj_in: CharityProjectUpdate,
 ) -> None:
-    if obj_in.full_amount is not None:
-        if project.invested_amount > obj_in.full_amount:
-            raise HTTPException(
-                status_code=400,
-                detail='Запрещено устанавливать требуемую сумму меньше внесённой.',
-            )
-    if project.fully_invested is True:
+    if project.fully_invested:
         raise HTTPException(
             status_code=400,
-            detail='Закрытый проект нельзя редактировать!',
+            detail='Закрытый проект нельзя редактировать!'
         )
+    if (obj_in.full_amount and
+       obj_in.full_amount < project.invested_amount):
+        raise HTTPException(
+            status_code=422,
+            detail='Требуемая сумма не может быть меньше уже внесенной!'
+        )
+    if (obj_in.full_amount and
+       obj_in.full_amount == project.invested_amount):
+        project.fully_invested = True
+        project.close_date = datetime.now()
 
 
 async def check_name_duplicate(
