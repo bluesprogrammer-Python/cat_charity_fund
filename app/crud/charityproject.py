@@ -1,11 +1,11 @@
+from datetime import datetime
 from typing import Optional
-
+from app.services.invest import invest_extra_in_new_project
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import AsyncSessionLocal
-from app.models.charityproject import CharityProject
+from app.models.charity_project import CharityProject
 from app.schemas.charityproject import (CharityProjectCreate,
                                         CharityProjectUpdate)
 
@@ -16,7 +16,15 @@ async def create_charityproject(
 ) -> CharityProject:
 
     new_project_dict = new_project.dict()
-    db_project = CharityProject(**new_project_dict)
+    new_project_dict['create_date'] = datetime.now()
+    new_project_dict['close_date'] = None
+    new_project_dict['invested_amount'] = 0
+    new_project_dict['fully_invested'] = False
+
+    """Вызов функции инвестирования"""
+    invest_new_project = await invest_extra_in_new_project(new_project_dict, session)
+
+    db_project = CharityProject(**invest_new_project)
     session.add(db_project)
     await session.commit()
     await session.refresh(db_project)

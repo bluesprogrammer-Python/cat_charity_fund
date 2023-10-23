@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_async_session
-from app.core.users import current_superuser
+from app.core.user import current_superuser
 from app.crud.charityproject import (create_charityproject, delete_project,
                                      get_project_by_id, get_project_id_by_name,
                                      read_all_projects_from_db, update_project)
@@ -66,7 +66,7 @@ async def check_name_duplicate(
     project_id = await get_project_id_by_name(project_name, session)
     if project_id is not None:
         raise HTTPException(
-            status_code=422,
+            status_code=400,
             detail='Проект с таким именем уже существует!',
         )
 
@@ -82,6 +82,9 @@ async def remove_project(
         session: AsyncSession = Depends(get_async_session),
 ):
     project = await check_project_exists(
+        project_id, session
+    )
+    project = await check_project_close(
         project_id, session
     )
     project = await delete_project(
@@ -101,5 +104,20 @@ async def check_project_exists(
         raise HTTPException(
             status_code=404,
             detail='Проект не найден!'
+        )
+    return project
+
+
+async def check_project_close(
+        project_id: int,
+        session: AsyncSession,
+) -> CharityProjectDB:
+    project = await get_project_by_id(
+        project_id, session
+    )
+    if project.close_date is not None:
+        raise HTTPException(
+            status_code=400,
+            detail='В проект были внесены средства, не подлежит удалению!'
         )
     return project
