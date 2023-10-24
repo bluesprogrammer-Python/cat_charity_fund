@@ -9,8 +9,10 @@ from app.core.db import get_async_session
 from app.core.user import current_superuser
 from app.crud.charityproject import (create_charityproject, delete_project,
                                      read_all_projects_from_db, update_project)
+from app.crud.donation import get_active_donation
 from app.schemas.charityproject import (CharityProjectCreate, CharityProjectDB,
                                         CharityProjectUpdate)
+from app.services.invest import invest_donation
 
 router = APIRouter(prefix='/charity_project')
 
@@ -25,9 +27,13 @@ async def create_new_project(
         charityproject: CharityProjectCreate,
         session: AsyncSession = Depends(get_async_session),
 ):
+    """Создание проекта. Доступно только для суперпользователя."""
     await check_name_duplicate(charityproject.name, session)
     await check_desc_exists(charityproject.description)
     new_project = await create_charityproject(charityproject, session)
+    donation_instorage = await get_active_donation(session)
+    if donation_instorage:
+        await invest_donation(new_project, donation_instorage, session)
     return new_project
 
 
@@ -39,6 +45,8 @@ async def create_new_project(
 async def get_all_projects(
         session: AsyncSession = Depends(get_async_session),
 ):
+    """Получение всех проектов. Доступно всем, даже неавторизованным
+    пользователям."""
     all_projects = await read_all_projects_from_db(session)
     return all_projects
 
@@ -53,6 +61,7 @@ async def partially_update_project(
         obj_in: CharityProjectUpdate,
         session: AsyncSession = Depends(get_async_session),
 ):
+    """Обновление проекта по id. Доступно только для суперпользователя."""
     project = await check_project_exists(
         project_id, session
     )
@@ -74,6 +83,7 @@ async def remove_project(
         project_id: int,
         session: AsyncSession = Depends(get_async_session),
 ):
+    """Удаление проекта по id. Доступно только для суперпользователя."""
     project = await check_project_exists(
         project_id, session
     )

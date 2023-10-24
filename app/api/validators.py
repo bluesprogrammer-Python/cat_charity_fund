@@ -11,6 +11,7 @@ async def check_project_exists(
         project_id: int,
         session: AsyncSession,
 ) -> CharityProjectDB:
+    """Проверка наличия проекта в БД по его id"""
     project = await get_project_by_id(
         project_id, session
     )
@@ -25,6 +26,7 @@ async def check_project_exists(
 async def check_project_close(
         project: CharityProjectDB,
 ) -> None:
+    """Проверка состояния проекта в БД - закрыт или нет"""
     if project.close_date is not None:
         raise HTTPException(
             status_code=400,
@@ -36,6 +38,7 @@ async def check_project_close(
 async def check_project_is_invest(
         project: CharityProjectDB,
 ) -> None:
+    """Проверка наличия вложенных инвестиций в проект"""
     if project.invested_amount != 0:
         raise HTTPException(
             status_code=400,
@@ -48,6 +51,7 @@ async def check_project_fullamount(
         project: CharityProjectDB,
         obj_in: CharityProjectUpdate,
 ) -> None:
+    """Проверка статуса и суммы проекта перед обновлением"""
     if project.fully_invested:
         raise HTTPException(
             status_code=400,
@@ -69,6 +73,7 @@ async def check_name_duplicate(
         project_name: str,
         session: AsyncSession,
 ) -> None:
+    """Проверка имени на уникальность перед созданием нового проекта"""
     project_id = await get_project_id_by_name(project_name, session)
     if project_id is not None:
         raise HTTPException(
@@ -80,6 +85,7 @@ async def check_name_duplicate(
 async def check_desc_exists(
         project_description: str,
 ) -> None:
+    """Проверка отправки пустых значений перед обновлением для поля description"""
     if project_description is None or project_description == "":
         raise HTTPException(
             status_code=422,
