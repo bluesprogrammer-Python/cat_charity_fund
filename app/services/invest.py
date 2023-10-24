@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.charity_project import CharityProject
 from app.models.donation import Donation
 
-
 STORAGE_FOND = []
 
 
@@ -73,7 +72,6 @@ async def invest_donation(
             new_donation_dict = ANSWERS[0]
             IS_IN_STORAGE = ANSWERS[1]
             EXTRA_INVESTED = ANSWERS[2]
-    print(STORAGE_FOND)
     return new_donation_dict
 
 
@@ -130,7 +128,7 @@ async def invest_extra_in_new_project(
         donation = await session.execute(
             select(Donation).order_by(
                 Donation.create_date
-            ).where(Donation.fully_invested == 0)
+            ).where(Donation.fully_invested is False)
         )
         donation = donation.scalars().first()
         if rezerv_donation + new_project_dict['invested_amount'] < new_project_dict['full_amount']:
@@ -161,7 +159,4 @@ async def invest_extra_in_new_project(
             donation.invested_amount += (new_project_dict['full_amount'] - INVESTED_BEFORE)
             STORAGE_FOND[0] = EXTRA_INVESTED
             break
-
-    print(STORAGE_FOND)
-
     return new_project_dict
