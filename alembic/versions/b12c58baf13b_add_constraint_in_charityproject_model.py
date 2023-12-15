@@ -1,8 +1,8 @@
-"""add default values in models
+"""add constraint in charityproject model
 
-Revision ID: e252950b4ec3
+Revision ID: b12c58baf13b
 Revises: 
-Create Date: 2023-10-23 20:23:43.729027
+Create Date: 2023-10-26 00:03:34.897950
 
 """
 import sqlalchemy as sa
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision = 'e252950b4ec3'
+revision = 'b12c58baf13b'
 down_revision = None
 branch_labels = None
 depends_on = None

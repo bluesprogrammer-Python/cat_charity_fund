@@ -66,5 +66,28 @@ class CRUDCharityProject(CRUDBase):
         await session.commit()
         return db_project
 
+    async def get_projects_by_completion_rate(
+            self,
+            session: AsyncSession,
+    ):
+        """Получение закрытых проектов и сортировка по скорости
+        сбора средств"""
+        close_projects = await session.execute(
+            select(CharityProject).where(
+                CharityProject.fully_invested == True
+            )
+        )
+        close_projects = close_projects.scalars().all()
+        sort_projects = sorted(close_projects, key=lambda x: (x.close_date - x.create_date))
+        return sort_projects
+
 
 charityproject_crud = CRUDCharityProject(CharityProject)
+
+
+"""
+for project in close_projects:
+            time_diff = project.close_date - project.create_date
+            projects_diff_dict[project.id] = time_diff
+        sort_data = sorted(projects_diff_dict.items(), key=lambda x: x[1])
+"""
